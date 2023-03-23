@@ -1,14 +1,18 @@
-package main
+package yaraLib
 
 import (
+	"bufio"
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/xFaraday/yara-storm/config"
 
 	"github.com/hillu/go-yara/v4"
 	"go.uber.org/zap"
@@ -49,6 +53,37 @@ type finfo struct {
 // 1. Call YaraCompile(yaraRules) to create a compiler with the rules <yaraRules>
 // 2. saved variable returned from YaraCompile(yaraRules) and use variable.GetRules() to get the rules
 // 3. Call Either YaraScanFile(yaraRules, file) or YaraScanProcess(yaraRules, pid) to scan a file or process
+
+func OpenFile(file string) []string {
+	var s []string
+	stats := CheckFile(file)
+	if stats.Size != 0 {
+		f, err := os.Open(file)
+		if err != nil {
+			panic(err)
+		}
+		// remember to close the file at the end of the program
+		defer f.Close()
+
+		// read the file line by line using scanner
+		scanner := bufio.NewScanner(f)
+
+		for scanner.Scan() {
+			// do something with a line
+			s = append(s, scanner.Text())
+		}
+
+		if err := scanner.Err(); err != nil {
+			panic(err)
+		}
+
+		//print slice with contents of file
+		//for _, str := range s {
+		//	println(str)
+		//}
+	}
+	return s
+}
 
 func CheckFile(name string) finfo {
 	fileInfo, err := os.Stat(name)
@@ -210,4 +245,24 @@ func PerformFileScan(rules *yara.Rules, f string) FileMatch {
 		}
 	}
 	return FileMatch{}
+}
+
+func GetRulesNames() []string {
+	var RuleNames []string
+	yaraRules := config.GetYaraLocation()
+
+	ruleSet := FindRules(yaraRules)
+
+	re := regexp.MustCompile(`^rule [a-zA-Z0-9_]+`)
+
+	for _, rule := range ruleSet {
+		//read the file
+		file := OpenFile(rule)
+		for _, line := range file {
+			if re.MatchString(line) {
+				RuleNames = append(RuleNames, line)
+			}
+		}
+	}
+	return RuleNames
 }

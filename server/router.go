@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/xFaraday/yara-storm/yaraLib"
 )
 
 type File struct {
@@ -14,12 +15,30 @@ type File struct {
 	ModTime string
 }
 
-type User struct {
-	Name  string `json:"name"`
-	Email string `json:"email"`
+type Rules struct {
+	Name   string `json:"name"`
+	Number int    `json:"number"`
 }
 
-func NewRouter(apiToken string) *gin.Engine {
+type RuleSet struct {
+	Rules []Rules `json:"rules"`
+}
+
+func GetYaraRulesLoaded() RuleSet {
+	rules := yaraLib.GetRulesNames()
+
+	ruleset := RuleSet{}
+	for i, rule := range rules {
+		ruleset.Rules = append(ruleset.Rules, Rules{Name: rule, Number: i})
+		println(rule)
+	}
+	for _, rule := range ruleset.Rules {
+		println(rule.Name)
+	}
+	return ruleset
+}
+
+func NewRouter() *gin.Engine {
 	// Disable Console Color, you don't need console color when writing the logs to file.
 	gin.DisableConsoleColor()
 
@@ -36,8 +55,8 @@ func NewRouter(apiToken string) *gin.Engine {
 	})
 
 	router.GET("/", func(c *gin.Context) {
-		yaraJson := User{Name: "test", Email: "testagain"}
-		c.JSON(http.StatusOK, yaraJson)
+		ruleset := GetYaraRulesLoaded()
+		c.JSON(http.StatusOK, ruleset)
 	})
 
 	router.MaxMultipartMemory = 8 << 20 // 8 MiB

@@ -1,6 +1,6 @@
 package server
 
-func Init(apiToken string) {
-	r := NewRouter(apiToken)
-	r.Run(":5000")
+func Init(Port string) {
+	r := NewRouter()
+	r.Run(":" + Port)
 }

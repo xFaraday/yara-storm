@@ -2,9 +2,9 @@ package main
 
 import (
 	"flag"
-	"yarastorm/server"
 
-	"github.com/xFaraday/yarastorm/config"
+	"github.com/xFaraday/yara-storm/config"
+	"github.com/xFaraday/yara-storm/server"
 )
 
 var (
@@ -17,6 +17,8 @@ func main() {
 
 	flag.StringVar(&Port, "port", "80", "Port to run the server on")
 	flag.StringVar(&YaraLocation, "yara", "/srv/yara-storm/rules", "Location of the yara rules")
-
-	server.Init()
+	flag.Parse()
+	println("Port: " + Port)
+	config.MakeConfig(Port, YaraLocation)
+	server.Init(Port)
 }
