@@ -9,4 +9,5 @@ WORKDIR /home/yara-storm
 RUN mkdir -p /srv/yara-storm/rules 
 RUN cp all-yara.yar /srv/yara-storm/rules
 EXPOSE 42069
-ENTRYPOINT go run main.go --port=42069
+#CMD git reset --hard main
+ENTRYPOINT git reset --hard main && go run main.go --port=42069
